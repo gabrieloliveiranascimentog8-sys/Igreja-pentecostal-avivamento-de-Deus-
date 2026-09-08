@@ -1,191 +1,148 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Vídeos - Avivamento</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Avivamento</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet" href="index.css">
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{background:#0a0a0a;color:#fff;font-family:Arial,sans-serif;padding-bottom:85px}
-.top-player{width:100%;aspect-ratio:16/9;background:#000;position:sticky;top:0;z-index:10;overflow:hidden}
-.top-player iframe{width:100%;height:100%}
-.capa-thumb{position:absolute;inset:0;background:#000;z-index:20;display:flex;align-items:center;justify-content:center;background-size:cover;background-position:center}
-.capa-thumb::after{content:'';position:absolute;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(8px)}
-.capa-conteudo{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.thumb-box{width:200px;aspect-ratio:16/9;border-radius:14px;overflow:hidden;position:relative;box-shadow:0 10px 40px rgba(0,0,0,.9)}
-.thumb-box img{width:100%;height:100%;object-fit:cover}
-.loader-meio{position:absolute;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center}
-.spinner{width:44px;height:44px;border:3px solid rgba(255,255,255,.2);border-top-color:#ff2d55;border-radius:50%;animation:spin 0.8s linear infinite}
+body{margin:0;background:#000}
+#feed{height:100dvh;overflow-y:scroll;scroll-snap-type:y mandatory;background:#000}
+.video{height:100dvh;scroll-snap-align:start;position:relative;background:#111;width:100vw;overflow:hidden}
+.video iframe{width:100%;height:100%;border:0;position:absolute;inset:0}
+.skeleton{height:100dvh;scroll-snap-align:start;position:relative;background:#111;width:100vw;display:flex;flex-direction:column;justify-content:flex-end;padding:20px;box-sizing:border-box;gap:12px}
+.skeleton::before{content:'';position:absolute;inset:0;background:linear-gradient(100deg,#111 20%,#222 40%,#111 60%);background-size:200% 100%;animation:shimmer 1.2s infinite}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+.skeleton.linha{height:14px;background:#222;border-radius:8px;position:relative;z-index:1}
+.skeleton.linha.t1{width:40%}
+.skeleton.linha.t2{width:70%}
+.skeleton.linha.t3{width:55%}
+.loader-video{position:absolute;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;background:#000}
+.spinner{width:45px;height:45px;border:3px solid rgba(255,255,255,.2);border-top:3px solid #ff0000;border-radius:50%;animation:spin 0.8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.txt-load{margin-top:14px;font-size:13px;font-weight:700;letter-spacing:1px;opacity:.8}
-.info{padding:16px}
-.title{font-size:20px;font-weight:800}
-.views{font-size:13px;opacity:.6;margin-top:6px}
-.actions-row{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
-.btn-action{background:#1e1e1e;border:0;color:#fff;padding:11px 18px;border-radius:30px;display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;cursor:pointer}
-.btn-action.curtido{background:#ff2d55;color:#fff}
-.search-box{margin:12px 16px;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:30px;display:flex;align-items:center;padding:0 16px;height:48px}
-.search-box i{font-size:18px;opacity:.6;margin-right:10px}
-.search-box input{flex:1;background:transparent;border:0;color:#fff;font-size:14px;outline:none}
-.list{display:flex;flex-direction:column;padding-bottom:20px}
-.video-item{display:flex;gap:12px;padding:12px 16px;cursor:pointer;border-radius:16px;margin:4px 8px}
-.thumb-wrap{width:160px;min-width:160px;aspect-ratio:16/9;background:#111;border-radius:12px;overflow:hidden;position:relative}
-.thumb-wrap img{width:100%;height:100%;object-fit:cover}
-.duracao{position:absolute;bottom:6px;right:6px;background:rgba(0,0,0,.85);color:#fff;font-size:11px;font-weight:700;padding:2px 6px;border-radius:4px}
-.v-info h4{font-size:14px;font-weight:700;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.v-info p{font-size:12px;opacity:.6;margin-top:3px}
-.next-header{display:flex;justify-content:space-between;align-items:center;padding:16px}
-.switch{width:38px;height:22px;background:#333;border-radius:20px;position:relative}
-.switch.active{background:#ff2d55}
-.switch::after{content:'';width:18px;height:18px;background:#fff;border-radius:50%;position:absolute;top:2px;left:2px;transition:.3s}
-.switch.active::after{left:18px}
-.nav{position:fixed;bottom:12px;left:12px;right:12px;height:72px;background:rgba(20,20,20,.95);border:1px solid rgba(255,255,255,.1);border-radius:28px;display:flex;justify-content:space-around;align-items:center;z-index:20}
-.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 6px;border-radius:20px;cursor:pointer;opacity:.45;color:#fff}
-.nav-item.active{opacity:1;background:rgba(255,45,85,.18);color:#ff2d55}
-.nav-item i{font-size:24px}
-.nav-item span{font-size:10px;font-weight:700}
+.bottom{position:absolute;bottom:100px;left:14px;right:14px;z-index:2;color:#fff;text-shadow:0 2px 8px #000;pointer-events:none;background:rgba(0,0,0,.4);padding:8px;border-radius:8px}
+.fim{height:40vh;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;gap:10px;padding-bottom:100px}
+.fim button{padding:10px 20px;border-radius:20px;border:0;background:#ff0000;color:#fff;font-weight:bold}
+.nav{position:fixed;bottom:12px;left:12px;right:12px;height:72px;z-index:9999}
 </style>
 </head>
 <body>
-<div class="top-player" id="mainPlayer"></div>
-<div class="info">
-<div class="title" id="mainTitle">Carregando...</div>
-<div class="views" id="mainViews"></div>
-<div class="actions-row">
-<button id="btnCurtir" class="btn-action" onclick="curtir()"><i class="bi bi-hand-thumbs-up-fill"></i> <span id="txtCurtir">12 mil</span></button>
-<button id="btnPlayback" class="btn-action" style="display:none;background:#ff2d55" onclick="alternarPlayback()"><i class="bi bi-music-note-beamed"></i> <span id="txtPlayback">Playback</span></button>
+
+<div id="feed">
+  <div class="skeleton"><div class="linha t1"></div><div class="linha t2"></div><div class="linha t3"></div></div>
+  <div class="skeleton"><div class="linha t1"></div><div class="linha t2"></div><div class="linha t3"></div></div>
+  <div class="skeleton"><div class="linha t1"></div><div class="linha t2"></div><div class="linha t3"></div></div>
 </div>
+
+<div class="nav">
+  <div class="nav-item active"><i class="bi bi-house-door-fill"></i><span>Início</span></div>
+  <div class="nav-item" onclick="location.href='video.html'"><i class="bi bi-play-btn-fill"></i><span>Vídeos</span></div>
+  <div class="nav-item" onclick="location.href='kids.html'"><i class="bi bi-puzzle-fill"></i><span>Kids</span></div>
+  <div class="nav-item" onclick="location.href='cultos.html'"><i class="bi bi-calendar-heart-fill"></i><span>Cultos</span></div>
+  <div class="nav-item" onclick="location.href='quiz.html'"><i class="bi bi-trophy-fill"></i><span>Quiz</span></div>
 </div>
-<div class="search-box"><i class="bi bi-search"></i><input type="text" id="busca" placeholder="Buscar..." oninput="filtrar()"></div>
-<div class="next-header"><h3 id="headerProximos">Próximos</h3><div style="display:flex;align-items:center;gap:8px;font-size:12px;opacity:.7">Auto <div class="switch active" id="autoSwitch" onclick="this.classList.toggle('active')"></div></div></div>
-<div class="list" id="listaVideos"></div>
-<div class="nav"><div class="nav-item" onclick="location.href='index.html'"><i class="bi bi-house-door-fill"></i><span>Início</span></div><div class="nav-item active"><i class="bi bi-play-btn-fill"></i><span>Vídeos</span></div><div class="nav-item" onclick="location.href='kids.html'"><i class="bi bi-puzzle-fill"></i><span>Kids</span></div><div class="nav-item" onclick="location.href='cultos.html'"><i class="bi bi-calendar-heart-fill"></i><span>Cultos</span></div><div class="nav-item" onclick="location.href='quiz.html'"><i class="bi bi-trophy-fill"></i><span>Quiz</span></div></div>
-<script src="https://www.youtube.com/iframe_api"></script>
+
 <script>
-const SHEET_ID = `1tFe-1zOzZwD_Wc_UsydvUUHnl70Y_Woh-SwNoD-yyWk`;
-const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
-function getID(u){ if(!u) return null; let m=u.match(/(?:v=|youtu\.be\/|shorts\/|embed\/)([A-Za-z0-9_-]{11})/); return m?m[1]:null; }
-function embaralhar(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]] } return a; }
-let videos=[], filtrados=[], atualId=null, player=null, listaAtual=[], visiveis=0; const POR_VEZ=10;
-let mapaPlayback={}, mapaNormal={}, modoAtual='normal', descricaoAtual='', cantorAtual='';
-let curtidos = JSON.parse(localStorage.getItem('curtidos_videos')||'{}');
-let travaSom = null;
-function onYouTubeIframeAPIReady(){}
-function mostrarCapa(ytId){
-  const capa = document.getElementById('capa');
-  const img = document.getElementById('capaImg');
-  const thumbUrl = `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
-  if(img) img.src = thumbUrl;
-  capa.style.backgroundImage = `url(${thumbUrl})`;
-  capa.style.display='flex';
-  if(travaSom) clearInterval(travaSom);
-  travaSom = setInterval(()=>{ if(player && player.mute){ player.mute(); player.setVolume(0); } }, 80);
-  setTimeout(()=>{
-    clearInterval(travaSom);
-    capa.style.display='none';
-    if(player){
-      player.seekTo(0, true);
-      player.unMute();
-      player.setVolume(100);
-      player.playVideo();
-    }
-  }, 6000);
+const SHEET_URL = `https://docs.google.com/spreadsheets/d/1F4i76rq3FNa6QSaKVTBzXekw5d6H522i-TIU_nn-H0c/gviz/tq?tqx=out:csv`;
+
+function getID(url){ let m=(url||'').match(/(?:v=|youtu\.be\/|shorts\/|embed\/)([A-Za-z0-9_-]{11})/); return m?m[1]:null; }
+function embaralhar(a){ for(let i=a.length-1;i>0;i--){ let j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]] } return a }
+function getAssistidos(){ return JSON.parse(localStorage.getItem('assistidos_v2') || '[]'); }
+function salvarAssistido(id){ let l=getAssistidos(); if(!l.includes(id)){ l.push(id); localStorage.setItem('assistidos_v2', JSON.stringify(l)); } }
+function resetarTudo(){ localStorage.removeItem('assistidos_v2'); location.reload(); }
+function comando(iframe, func){ try{ iframe.contentWindow.postMessage(JSON.stringify({event:'command',func:func,args:''}), '*'); }catch(e){} }
+
+let ordem = [];
+let carregados = 0;
+const LOTE = 3;
+let observerPlay;
+let atual = -1;
+
+function criarObserverPlay(){
+  if(observerPlay) observerPlay.disconnect();
+  observerPlay = new IntersectionObserver((entries)=>{
+    entries.forEach(entry=>{
+      if(entry.isIntersecting){
+        const idx = parseInt(entry.target.dataset.index);
+        if(idx === atual) return;
+        atual = idx;
+        document.querySelectorAll('.video iframe').forEach((ifr, j)=>{ if(j!== idx) comando(ifr, 'pauseVideo'); });
+        const atualIframe = document.getElementById(`iframe-${idx}`);
+        if(atualIframe){ salvarAssistido(ordem[idx].ytId); setTimeout(()=> comando(atualIframe, 'playVideo'), 300); }
+
+        // QUANDO CHEGA NO PENÚLTIMO CARREGA MAIS 3
+        if(idx >= carregados - 2){
+          carregarLote();
+        }
+      }
+    });
+  }, {threshold: 0.75});
+  document.querySelectorAll('.video').forEach(v=> observerPlay.observe(v));
 }
-function criarPlayer(id){
-  document.getElementById('mainPlayer').innerHTML=`
-    <div id="yt-player"></div>
-    <div id="capa" class="capa-thumb">
-      <div class="capa-conteudo">
-        <div class="thumb-box">
-          <img id="capaImg" src="https://img.youtube.com/vi/${id}/hqdefault.jpg">
-          <div class="loader-meio"><div class="spinner"></div></div>
-        </div>
-        <div class="txt-load">CARREGANDO</div>
+
+function criarHTMLVideo(v,i){
+  return `
+    <div class="video" data-index="${i}" id="video-${i}">
+      <div class="loader-video" id="loader-${i}"><div class="spinner"></div></div>
+      <iframe id="iframe-${i}" onload="document.getElementById('loader-${i}').style.display='none'"
+        src="https://www.youtube.com/embed/${v.ytId}?enablejsapi=1&controls=1&rel=0&modestbranding=1&playsinline=1&mute=0&loop=1&playlist=${v.ytId}"
+        allow="autoplay; encrypted-media; fullscreen"
+        allowfullscreen>
+      </iframe>
+      <div class="bottom">
+        <div>${v.cantor||''}</div>
+        <b>${v.titulo||''}</b>
       </div>
     </div>`;
-  player=new YT.Player('yt-player',{
-    width:'100%',height:'100%',
-    videoId:id,
-    host:'https://www.youtube-nocookie.com',
-    playerVars:{autoplay:1,controls:1,fs:1,rel:0,playsinline:1,modestbranding:1,mute:1},
-    events:{
-      'onReady': (e) => { e.target.mute(); e.target.playVideo(); mostrarCapa(id); },
-      'onStateChange': onPlayerStateChange
-    }
-  });
 }
-function onPlayerStateChange(e){
-  if(e.data===0){
-    if(!document.getElementById('autoSwitch').classList.contains('active')) return;
-    const i=videos.findIndex(v=>v.ytId===atualId);
-    if(i>-1) videos.push(videos.splice(i,1)[0]);
-    modoAtual='normal';
-    const p=videos[0];
-    if(p) tocarVideo(p.ytId,p.descricao,p.cantor,false);
+
+function carregarLote(){
+  const feed = document.getElementById('feed');
+  // remove o fim se existir
+  const fimExistente = document.getElementById('fim-avivamento');
+  if(fimExistente) fimExistente.remove();
+
+  const proximoFim = Math.min(carregados + LOTE, ordem.length);
+  for(let i = carregados; i < proximoFim; i++){
+    feed.insertAdjacentHTML('beforeend', criarHTMLVideo(ordem[i], i));
   }
+  carregados = proximoFim;
+
+  // se acabou, coloca o fim
+  if(carregados >= ordem.length){
+    feed.insertAdjacentHTML('beforeend', `<div class="fim" id="fim-avivamento"><h2>Fim por hoje!</h2><button onclick="resetarTudo()">Ver de novo</button></div>`);
+  }
+  criarObserverPlay();
 }
-function tocarVideo(ytId, descricao, cantor, manterFila=true){
-  if(manterFila&&atualId){ const i=videos.findIndex(v=>v.ytId===atualId); if(i>-1){ const t=videos.splice(i,1)[0]; if(t.ytId!==ytId) videos.push(t); } }
-  atualId=ytId; descricaoAtual=descricao; cantorAtual=cantor; modoAtual='normal';
-  document.getElementById('mainTitle').innerText=descricao;
-  document.getElementById('mainViews').innerText=`Tocando agora • ${cantor}`;
-  const key=descricao.toLowerCase().trim();
-  document.getElementById('btnPlayback').style.display=mapaPlayback[key]?'flex':'none';
-  document.getElementById('txtPlayback').innerText='Playback';
-  atualizarBotaoCurtir();
-  if(player&&player.loadVideoById){ player.loadVideoById(ytId); player.mute(); mostrarCapa(ytId); } else criarPlayer(ytId);
-  resetarLista(); history.replaceState(null,'',`?v=${ytId}`);
-}
-function alternarPlayback(){
-  const key=descricaoAtual.toLowerCase().trim(); const idPlay=mapaPlayback[key]; const idNormal=mapaNormal[key]; if(!idPlay) return;
-  if(modoAtual==='normal'){ modoAtual='playback'; atualId=idPlay; player.loadVideoById(idPlay); mostrarCapa(idPlay); document.getElementById('mainViews').innerText=`Playback • ${cantorAtual}`; document.getElementById('txtPlayback').innerText='Vídeo normal'; }
-  else{ modoAtual='normal'; atualId=idNormal; player.loadVideoById(idNormal); mostrarCapa(idNormal); document.getElementById('mainViews').innerText=`Tocando agora • ${cantorAtual}`; document.getElementById('txtPlayback').innerText='Playback'; }
-}
-function atualizarBotaoCurtir(){
-  const btn=document.getElementById('btnCurtir');
-  if(curtidos[atualId]){ btn.classList.add('curtido'); document.getElementById('txtCurtir').innerText='Curtido'; }
-  else{ btn.classList.remove('curtido'); document.getElementById('txtCurtir').innerText='12 mil'; }
-}
-function curtir(){
-  if(!atualId) return;
-  const btn=document.getElementById('btnCurtir');
-  if(curtidos[atualId]){ delete curtidos[atualId]; btn.classList.remove('curtido'); document.getElementById('txtCurtir').innerText='12 mil'; }
-  else{ curtidos[atualId]=true; btn.classList.add('curtido'); document.getElementById('txtCurtir').innerText='Curtido ✓'; btn.animate([{transform:'scale(1)'},{transform:'scale(1.2)'},{transform:'scale(1)'}],{duration:300}); }
-  localStorage.setItem('curtidos_videos', JSON.stringify(curtidos));
-}
-function resetarLista(){ visiveis=0; document.getElementById('listaVideos').innerHTML=''; prepararListaAtual(); carregarMais(); }
-function prepararListaAtual(){ const t=document.getElementById('busca').value.trim(); listaAtual=t?filtrados:videos.filter(v=>v.ytId!==atualId); }
-function renderItens(qtd){ const el=document.getElementById('listaVideos'); const fim=Math.min(visiveis+qtd,listaAtual.length); listaAtual.slice(visiveis,fim).forEach(v=>{ const d=document.createElement('div'); d.className='video-item'; d.onclick=()=>tocarVideo(v.ytId,v.descricao,v.cantor); d.innerHTML=`<div class="thumb-wrap"><img src="https://img.youtube.com/vi/${v.ytId}/mqdefault.jpg"><span class="duracao">7:00</span></div><div class="v-info"><h4>${v.descricao}</h4><p>${v.cantor} • 7 min</p></div>`; el.appendChild(d); }); visiveis=fim; }
-function carregarMais(){ if(visiveis<listaAtual.length) renderItens(POR_VEZ); }
-function filtrar(){ const t=document.getElementById('busca').value.toLowerCase().trim(); const h=document.getElementById('headerProximos'); if(!t){ filtrados=[]; h.innerText='Próximos'; resetarLista(); return; } filtrados=videos.filter(v=>v.descricao.toLowerCase().includes(t)||v.cantor.toLowerCase().includes(t)); h.innerText=`${filtrados.length} resultados`; resetarLista(); }
+
 async function carregar(){
-  const res=await fetch(SHEET_URL+'&cb='+Date.now()); const csv=await res.text();
-  const linhas=csv.split('\n').slice(1);
-  linhas.forEach(l=>{
-    if(!l.trim()) return;
-    const cols=l.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c=>c.replace(/^"|"$/g,'').trim());
-    let ytId=null, idx=-1;
-    for(let i=0;i<cols.length;i++){ const id=getID(cols[i]); if(id){ ytId=id; idx=i; break; } }
+  const res = await fetch(SHEET_URL);
+  const csv = await res.text();
+  const linhas = csv.split('\n').slice(1);
+  let videos = [];
+  linhas.forEach(linha=>{
+    if(!linha.trim()) return;
+    const cols = linha.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c=>c.replace(/^"|"$/g,'').trim());
+    const [link, titulo, cantor] = cols;
+    const ytId = getID(link);
     if(!ytId) return;
-    const descricao = cols[idx+1] || '';
-    const cantor = cols[idx+2] || 'Avivamento';
-    const statusCol = (cols[idx+3] || '').toLowerCase();
-    const isPlayback = statusCol.startsWith('p');
-    const key=descricao.toLowerCase().trim();
-    if(!descricao) return;
-    if(isPlayback){ mapaPlayback[key]=ytId; }
-    else{ if(!mapaNormal[key]) mapaNormal[key]=ytId; videos.push({ytId, descricao, cantor}); }
+    videos.push({ytId, titulo, cantor});
   });
-  videos=[...new Map(videos.map(v=>[v.ytId,v])).values()];
-  videos=embaralhar(videos);
-  const params=new URLSearchParams(location.search);
-  const primeiro=videos.find(v=>v.ytId===params.get('v'))||videos[0];
-  if(primeiro){ videos=videos.filter(v=>v.ytId!==primeiro.ytId); videos.unshift(primeiro); tocarVideo(primeiro.ytId,primeiro.descricao,primeiro.cantor,false); }
+  videos = [...new Map(videos.map(v=>[v.ytId, v])).values()];
+  const assistidos = getAssistidos();
+  let naoVistos = videos.filter(v =>!assistidos.includes(v.ytId));
+  if(naoVistos.length===0 && videos.length>0){
+    document.getElementById('feed').innerHTML = `<div class="fim"><h2>Você viu tudo!</h2><button onclick="resetarTudo()">Ver de novo</button></div>`;
+    return;
+  }
+  ordem = embaralhar(naoVistos);
+  const feed = document.getElementById('feed');
+  feed.innerHTML = '';
+  carregados = 0;
+  carregarLote(); // carrega só os 3 primeiros
 }
 carregar();
-window.addEventListener('scroll',()=>{ if(window.innerHeight+window.scrollY>=document.body.offsetHeight-500) carregarMais(); });
 </script>
 </body>
-</html>
+  </html>
