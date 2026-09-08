@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kids</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet" href="index.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#000;color:#fff;font-family:Arial,sans-serif;overflow-y:auto}
+.player-area{width:100%;height:56vw;max-height:300px;background:#000;position:sticky;top:0;z-index:20}
+.player-area iframe,#yt-player-kids{width:100%;height:100%;border:0}
+.bloqueio-video{position:absolute;inset:0;z-index:8;display:none;background:transparent}
+body.locked.bloqueio-video{display:block} /* CORRIGIDO */
+body.locked.navbar{pointer-events:none;opacity:.2} /* CORRIGIDO */
+.top-controls{position:absolute;top:8px;right:8px;z-index:10;display:flex;gap:8px}
+.btn-icon{width:38px;height:38px;border-radius:50%;border:0;background:rgba(0,0,0,.7);color:#fff;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);font-size:18px;cursor:pointer}
+.btn-icon.lock-on{background:#ff0000}
+.conteudo{padding-bottom:100px} /* garante rolagem */
+.section-head{padding:18px 16px 12px;display:flex;justify-content:space-between;align-items:center}
+.section-head h2{font-size:22px;font-weight:900;border-left:4px solid #ff0000;padding-left:10px}
+.section-head span{color:#ff0000;font-size:14px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:0 12px}
+.card{border-radius:18px;overflow:hidden;position:relative;height:170px;background:#111;cursor:pointer;border:2px solid transparent}
+.card.active{border-color:#ff0000}
+.card img{width:100%;height:100%;object-fit:cover}
+.card::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.05) 40%, rgba(0,0,0,.85) 100%)}
+.card-top{position:absolute;top:8px;left:8px;right:8px;z-index:2;display:flex;justify-content:space-between}
+.card-title{font-size:11px;font-weight:900;text-transform:uppercase;line-height:1.1;width:68%;text-shadow:0 1px 3px #000;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card-play{width:32px;height:32px;background:rgba(0,0,0,.35);border:1.5px solid #fff;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.card-nome{position:absolute;bottom:8px;left:8px;right:8px;z-index:2;background:rgba(0,0,0,.75);padding:4px 8px;border-radius:8px;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+</style>
+</head>
+<body>
+
+<div class="player-area" id="kidsPlayer">
+  <div id="yt-wrap" style="width:100%;height:100%;position:relative">
+    <div class="top-controls">
+      <button class="btn-icon" onclick="proximoVideo()"><i class="bi bi-skip-forward-fill"></i></button>
+      <button class="btn-icon" id="btnLock" onclick="toggleLock()"><i class="bi bi-lock"></i></button>
+    </div>
+    <div class="bloqueio-video" id="blockVideo"></div>
+    <div id="yt-player-kids" style="width:100%;height:100%"></div>
+    <div id="ph" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#555;background:#000">Carregando...</div>
+  </div>
+</div>
+
+<div class="conteudo">
+  <div class="section-head"><h2>Desenhos</h2><span id="qtd"></span></div>
+  <div class="grid-3" id="gridDesenhos"></div>
+</div>
+
+<div class="nav">
+  <div class="nav-item" onclick="if(!locked) location.href='index.html'"><i class="bi bi-house-door-fill"></i><span>Início</span></div>
+  <div class="nav-item" onclick="if(!locked) location.href='video.html'"><i class="bi bi-play-btn-fill"></i><span>Vídeos</span></div>
+  <div class="nav-item active" onclick="if(!locked) location.href='kids.html'"><i class="bi bi-puzzle-fill"></i><span>Kids</span></div>
+  <div class="nav-item" onclick="if(!locked) location.href='cultos.html'"><i class="bi bi-calendar-heart-fill"></i><span>Cultos</span></div>
+  <div class="nav-item" onclick="if(!locked) location.href='quiz.html'"><i class="bi bi-trophy-fill"></i><span>Quiz</span></div>
+</div>
+
+<script src="https://www.youtube.com/iframe_api"></script>
+<script>
+const SHEET_URL = `https://docs.google.com/spreadsheets/d/1Mn4uJoNISA0ToIsMOaH_AWmOeiZ9P7poy2feA2Alwng/gviz/tq?tqx=out:csv`;
+let videosKids = [], ordemToca = [], atualIndex = 0, player = null;
+let locked = false;
+
+function getID(url){ let m=(url||'').match(/(?:v=|youtu\.be\/|shorts\/|embed\/)([A-Za-z0-9_-]{11})/); return m?m[1]:null }
+function onYouTubeIframeAPIReady(){ carregar(); }
+function embaralhar(a){ for(let i=a.length-1;i>0;i--){ let j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]] } return a }
+
+function toggleLock(){
+  locked =!locked;
+  document.body.classList.toggle('locked', locked);
+  const btn = document.getElementById('btnLock');
+  btn.classList.toggle('lock-on', locked);
+  btn.innerHTML = locked? `<i class="bi bi-lock-fill"></i>` : `<i class="bi bi-unlock"></i>`;
+  document.getElementById('blockVideo').style.display = locked? 'block' : 'none';
+}
+
+function tocarNoBanner(index){
+  atualIndex = index;
+  let video = ordemToca[atualIndex];
+  if(!video) return;
+  document.getElementById('ph').style.display = 'none';
+
+  if(player && player.loadVideoById){
+    // JÁ EXISTE PLAYER - SÓ TROCA E JÁ COMEÇA TOCANDO SEM PRECISAR PLAY
+    player.loadVideoById({videoId: video.ytId, startSeconds: 0});
+    player.playVideo();
+  } else {
+    player = new YT.Player('yt-player-kids',{
+      videoId: video.ytId,
+      playerVars:{
+        autoplay:1,
+        controls:0, // sem controles pra não ir pro YouTube
+        fs:0,
+        rel:0,
+        playsinline:1,
+        modestbranding:1,
+        iv_load_policy:3,
+        disablekb:1,
+        enablejsapi:1
+      },
+      events:{
+        onReady:(e)=>{ e.target.playVideo(); },
+        onStateChange:(e)=>{
+          if(e.data===0){ proximoVideo(); }
+        }
+      }
+    });
+  }
+  render();
+}
+
+function proximoVideo(){
+  let assistido = ordemToca.splice(atualIndex,1)[0];
+  ordemToca.push(assistido);
+  if(atualIndex >= ordemToca.length) atualIndex = 0;
+  tocarNoBanner(atualIndex);
+  // rola suave pro topo pra ver que trocou
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function render(){
+  document.getElementById('gridDesenhos').innerHTML = ordemToca.map((v,i)=>`
+    <div class="card ${i===atualIndex?'active':''}" onclick="tocarNoBanner(${i})">
+      <img src="https://img.youtube.com/vi/${v.ytId}/mqdefault.jpg">
+      <div class="card-top"><div class="card-title">${v.descricao}</div><div class="card-play"><i class="bi bi-play-fill"></i></div></div>
+      <div class="card-nome">${v.nome}</div>
+    </div>
+  `).join('');
+  document.getElementById('qtd').innerText = ordemToca.length + ' vídeos';
+}
+
+async function carregar(){
+  try{
+    const res = await fetch(SHEET_URL);
+    const csv = await res.text();
+    const linhas = csv.split('\n').slice(1);
+    linhas.forEach(l=>{
+      if(!l.trim()) return;
+      const cols = l.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c=>c.replace(/^"|"$/g,'').trim());
+      const [desenho, descricao, nome] = cols;
+      const ytId = getID(desenho);
+      if(ytId && descricao) videosKids.push({ytId, descricao: descricao.toUpperCase(), nome: nome.toLowerCase()});
+    });
+    videosKids = [...new Map(videosKids.map(v=>[v.ytId,v])).values()];
+    ordemToca = embaralhar([...videosKids]);
+    if(ordemToca.length){
+      render();
+      setTimeout(()=> tocarNoBanner(0), 500); // já começa tocando
+    }
+  }catch(e){}
+}
+</script>
+</body>
+</html>

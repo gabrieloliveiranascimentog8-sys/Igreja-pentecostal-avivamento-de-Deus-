@@ -1,0 +1,87 @@
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden}
+body{background:#000;color:#fff;font-family:Arial,sans-serif;overflow:hidden}
+
+#feed{
+  height:100dvh;
+  height:100vh;
+  height: -webkit-fill-available;
+  overflow-y:scroll;
+  scroll-snap-type:y mandatory;
+  padding-bottom:0;
+}
+#feed::-webkit-scrollbar{display:none}
+.video{
+  position:relative;
+  height:100dvh;
+  height:100vh;
+  width:100%;
+  scroll-snap-align:start;
+  background:#000;
+  overflow:hidden
+}
+.thumb{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1}
+.player{position:absolute;inset:0;width:100%;height:100%;z-index:2;display:none}
+.player.active{display:block}
+.overlay{position:absolute;inset:0;background:linear-gradient(0deg,rgba(0,0,0,.9) 0%,rgba(0,0,0,.1) 55%);z-index:3;pointer-events:none}
+.bottom{position:absolute;left:16px;right:85px;bottom:105px;z-index:4;pointer-events:none}
+.singer{font-size:13px;opacity:.85;font-weight:700;text-transform:lowercase}
+.title{font-size:19px;font-weight:800;margin-top:5px;line-height:1.25;text-transform:lowercase}
+.actions{position:absolute;right:12px;bottom:120px;z-index:4;display:flex;flex-direction:column;gap:22px}
+.btn{cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px}
+.btn:active{transform:scale(.88)}
+.btn i{width:50px;height:50px;background:rgba(255,255,255,.12);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.18);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 4px 20px rgba(0,0,0,.3)}
+.btn i.liked{background:#ff2d55!important;border-color:#ff2d55!important;animation:heartPop.4s ease}
+@keyframes heartPop{0%{transform:scale(1)}50%{transform:scale(1.3)}100%{transform:scale(1)}}
+.btn div{font-size:11px;font-weight:700}
+.play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:10;width:84px;height:84px;background:rgba(255,255,255,.95);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 8px 30px rgba(0,0,0,.4);animation:pulse 1.8s infinite}
+.play i{font-size:52px;color:#000;margin-left:6px}
+.play.hide{opacity:0;pointer-events:none;transform:translate(-50%,-50%) scale(.5);transition:.4s}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,255,255,.7)}70%{box-shadow:0 0 0 20px rgba(255,255,255,0)}100%{box-shadow:0 0 0 0 rgba(255,255,255,0)}}
+
+/* NAV PREMIUM QUE VOCÊ GOSTOU - CORRIGIDO */
+.nav{
+  position:fixed;
+  bottom:12px;
+  left:12px;
+  right:12px;
+  height:72px;
+  background:rgba(20,20,20,.95);
+  backdrop-filter:blur(20px);
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:28px;
+  display:flex;
+  justify-content:space-around;
+  align-items:center;
+  z-index:20;
+  box-shadow:0 10px 40px rgba(0,0,0,.6);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 6px;border-radius:20px;cursor:pointer;opacity:.45;transition:all.35s cubic-bezier(.34,1.56,.64,1);color:#fff;position:relative}
+.nav-item i{font-size:24px;transition:all.35s;display:block}
+.nav-item span{font-size:10px;font-weight:700}
+.nav-item.active{opacity:1;background:linear-gradient(135deg,rgba(255,45,85,.22),rgba(255,45,85,.08));color:#ff2d55;transform:translateY(-2px)}
+.nav-item.active i{transform:scale(1.2) translateY(-1px);filter:drop-shadow(0 0 8px rgba(255,45,85,.6));animation:navBounce.5s ease}
+.nav-item.active span{color:#ff2d55}
+.nav-item::after{content:'';position:absolute;bottom:-2px;left:50%;width:0;height:3px;background:#ff2d55;border-radius:3px;transform:translateX(-50%);transition:.35s}
+.nav-item.active::after{width:20px}
+@keyframes navBounce{0%{transform:scale(1)}40%{transform:scale(1.35)}60%{transform:scale(.95)}100%{transform:scale(1.2) translateY(-1px)}}
+
+.fim{
+  height:100dvh;
+  height:100vh;
+  width:100%;
+  scroll-snap-align:start;
+  background:linear-gradient(180deg,#111,#000);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:40px
+}
+.fim i{font-size:70px;color:#ff2d55;margin-bottom:16px}
+.fim h2{font-size:24px;font-weight:800}
+.fim p{opacity:.6;margin-top:8px;font-size:14px}
+.fim button{margin-top:22px;padding:14px 32px;border-radius:30px;border:0;background:#ff2d55;color:#fff;font-weight:800;font-size:14px;cursor:pointer;margin-bottom:10px}
+.fim small{opacity:.3;font-size:11px;margin-top:15px;display:block}

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vídeos - Avivamento</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a0a;color:#fff;font-family:Arial,sans-serif;padding-bottom:85px}
+.top-player{width:100%;aspect-ratio:16/9;background:#000;position:sticky;top:0;z-index:10}
+.top-player iframe{width:100%;height:100%}
+.info{padding:16px}
+.title{font-size:20px;font-weight:800}
+.views{font-size:13px;opacity:.6;margin-top:6px}
+.actions-row{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+.btn-action{background:#1e1e1e;border:0;color:#fff;padding:11px 18px;border-radius:30px;display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;cursor:pointer}
+.btn-action.curtido{background:#ff2d55;color:#fff}
+.search-box{margin:12px 16px;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:30px;display:flex;align-items:center;padding:0 16px;height:48px}
+.search-box i{font-size:18px;opacity:.6;margin-right:10px}
+.search-box input{flex:1;background:transparent;border:0;color:#fff;font-size:14px;outline:none}
+.list{display:flex;flex-direction:column;padding-bottom:20px}
+.video-item{display:flex;gap:12px;padding:12px 16px;cursor:pointer;border-radius:16px;margin:4px 8px}
+.thumb-wrap{width:160px;min-width:160px;aspect-ratio:16/9;background:#111;border-radius:12px;overflow:hidden}
+.thumb-wrap img{width:100%;height:100%;object-fit:cover}
+.v-info h4{font-size:14px;font-weight:700;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.v-info p{font-size:12px;opacity:.6;margin-top:3px}
+.next-header{display:flex;justify-content:space-between;align-items:center;padding:16px}
+.switch{width:38px;height:22px;background:#333;border-radius:20px;position:relative}
+.switch.active{background:#ff2d55}
+.switch::after{content:'';width:18px;height:18px;background:#fff;border-radius:50%;position:absolute;top:2px;left:2px;transition:.3s}
+.switch.active::after{left:18px}
+.nav{position:fixed;bottom:12px;left:12px;right:12px;height:72px;background:rgba(20,20,20,.95);border:1px solid rgba(255,255,255,.1);border-radius:28px;display:flex;justify-content:space-around;align-items:center;z-index:20}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 6px;border-radius:20px;cursor:pointer;opacity:.45;color:#fff}
+.nav-item.active{opacity:1;background:rgba(255,45,85,.18);color:#ff2d55}
+.nav-item i{font-size:24px}
+.nav-item span{font-size:10px;font-weight:700}
+</style>
+</head>
+<body>
+<div class="top-player" id="mainPlayer"></div>
+<div class="info">
+<div class="title" id="mainTitle">Carregando...</div>
+<div class="views" id="mainViews"></div>
+<div class="actions-row">
+<button id="btnCurtir" class="btn-action" onclick="curtir()"><i class="bi bi-hand-thumbs-up-fill"></i> <span id="txtCurtir">12 mil</span></button>
+<button id="btnPlayback" class="btn-action" style="display:none;background:#ff2d55" onclick="alternarPlayback()"><i class="bi bi-music-note-beamed"></i> <span id="txtPlayback">Playback</span></button>
+</div>
+</div>
+<div class="search-box"><i class="bi bi-search"></i><input type="text" id="busca" placeholder="Buscar..." oninput="filtrar()"></div>
+<div class="next-header"><h3 id="headerProximos">Próximos</h3><div style="display:flex;align-items:center;gap:8px;font-size:12px;opacity:.7">Auto <div class="switch active" id="autoSwitch" onclick="this.classList.toggle('active')"></div></div></div>
+<div class="list" id="listaVideos"></div>
+<div class="nav"><div class="nav-item" onclick="location.href='index.html'"><i class="bi bi-house-door-fill"></i><span>Início</span></div><div class="nav-item active"><i class="bi bi-play-btn-fill"></i><span>Vídeos</span></div><div class="nav-item" onclick="location.href='kids.html'"><i class="bi bi-puzzle-fill"></i><span>Kids</span></div><div class="nav-item" onclick="location.href='cultos.html'"><i class="bi bi-calendar-heart-fill"></i><span>Cultos</span></div><div class="nav-item" onclick="location.href='quiz.html'"><i class="bi bi-trophy-fill"></i><span>Quiz</span></div></div>
+<script src="https://www.youtube.com/iframe_api"></script>
+<script>
+const SHEET_ID = `1tFe-1zOzZwD_Wc_UsydvUUHnl70Y_Woh-SwNoD-yyWk`;
+const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
+function getID(u){ if(!u) return null; let m=u.match(/(?:v=|youtu\.be\/|shorts\/|embed\/)([A-Za-z0-9_-]{11})/); return m?m[1]:null; }
+function embaralhar(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]] } return a; }
+let videos=[], filtrados=[], atualId=null, player=null, listaAtual=[], visiveis=0; const POR_VEZ=10;
+let mapaPlayback={}, mapaNormal={}, modoAtual='normal', descricaoAtual='', cantorAtual='';
+let curtidos = JSON.parse(localStorage.getItem('curtidos_videos')||'{}');
+function onYouTubeIframeAPIReady(){}
+function criarPlayer(id){ document.getElementById('mainPlayer').innerHTML=`<div id="yt-player"></div>`; player=new YT.Player('yt-player',{width:'100%',height:'100%',videoId:id,playerVars:{autoplay:1,controls:1,fs:1,rel:0,playsinline:1},events:{'onStateChange':onPlayerStateChange}}); }
+function onPlayerStateChange(e){ if(e.data===0){ if(!document.getElementById('autoSwitch').classList.contains('active')) return; const i=videos.findIndex(v=>v.ytId===atualId); if(i>-1) videos.push(videos.splice(i,1)[0]); modoAtual='normal'; const p=videos[0]; if(p) tocarVideo(p.ytId,p.descricao,p.cantor,false); }}
+function tocarVideo(ytId, descricao, cantor, manterFila=true){
+  if(manterFila&&atualId){ const i=videos.findIndex(v=>v.ytId===atualId); if(i>-1){ const t=videos.splice(i,1)[0]; if(t.ytId!==ytId) videos.push(t); } }
+  atualId=ytId; descricaoAtual=descricao; cantorAtual=cantor; modoAtual='normal';
+  document.getElementById('mainTitle').innerText=descricao;
+  document.getElementById('mainViews').innerText=`Tocando agora • ${cantor}`;
+  const key=descricao.toLowerCase().trim();
+  document.getElementById('btnPlayback').style.display=mapaPlayback[key]?'flex':'none';
+  document.getElementById('txtPlayback').innerText='Playback';
+  atualizarBotaoCurtir();
+  if(player&&player.loadVideoById) player.loadVideoById(ytId); else criarPlayer(ytId);
+  resetarLista(); history.replaceState(null,'',`?v=${ytId}`);
+}
+function alternarPlayback(){
+  const key=descricaoAtual.toLowerCase().trim(); const idPlay=mapaPlayback[key]; const idNormal=mapaNormal[key]; if(!idPlay) return;
+  if(modoAtual==='normal'){ modoAtual='playback'; atualId=idPlay; player.loadVideoById(idPlay); document.getElementById('mainViews').innerText=`Playback • ${cantorAtual}`; document.getElementById('txtPlayback').innerText='Vídeo normal'; }
+  else{ modoAtual='normal'; atualId=idNormal; player.loadVideoById(idNormal); document.getElementById('mainViews').innerText=`Tocando agora • ${cantorAtual}`; document.getElementById('txtPlayback').innerText='Playback'; }
+}
+function atualizarBotaoCurtir(){
+  const btn=document.getElementById('btnCurtir');
+  if(curtidos[atualId]){ btn.classList.add('curtido'); document.getElementById('txtCurtir').innerText='Curtido'; }
+  else{ btn.classList.remove('curtido'); document.getElementById('txtCurtir').innerText='12 mil'; }
+}
+function curtir(){
+  if(!atualId) return;
+  const btn=document.getElementById('btnCurtir');
+  if(curtidos[atualId]){ delete curtidos[atualId]; btn.classList.remove('curtido'); document.getElementById('txtCurtir').innerText='12 mil'; }
+  else{ curtidos[atualId]=true; btn.classList.add('curtido'); document.getElementById('txtCurtir').innerText='Curtido ✓'; btn.animate([{transform:'scale(1)'},{transform:'scale(1.2)'},{transform:'scale(1)'}],{duration:300}); }
+  localStorage.setItem('curtidos_videos', JSON.stringify(curtidos));
+}
+function resetarLista(){ visiveis=0; document.getElementById('listaVideos').innerHTML=''; prepararListaAtual(); carregarMais(); }
+function prepararListaAtual(){ const t=document.getElementById('busca').value.trim(); listaAtual=t?filtrados:videos.filter(v=>v.ytId!==atualId); }
+function renderItens(qtd){ const el=document.getElementById('listaVideos'); const fim=Math.min(visiveis+qtd,listaAtual.length); listaAtual.slice(visiveis,fim).forEach(v=>{ const d=document.createElement('div'); d.className='video-item'; d.onclick=()=>tocarVideo(v.ytId,v.descricao,v.cantor); d.innerHTML=`<div class="thumb-wrap"><img src="https://img.youtube.com/vi/${v.ytId}/mqdefault.jpg"></div><div class="v-info"><h4>${v.descricao}</h4><p>${v.cantor}</p></div>`; el.appendChild(d); }); visiveis=fim; }
+function carregarMais(){ if(visiveis<listaAtual.length) renderItens(POR_VEZ); }
+function filtrar(){ const t=document.getElementById('busca').value.toLowerCase().trim(); const h=document.getElementById('headerProximos'); if(!t){ filtrados=[]; h.innerText='Próximos'; resetarLista(); return; } filtrados=videos.filter(v=>v.descricao.toLowerCase().includes(t)||v.cantor.toLowerCase().includes(t)); h.innerText=`${filtrados.length} resultados`; resetarLista(); }
+async function carregar(){
+  const res=await fetch(SHEET_URL+'&cb='+Date.now()); const csv=await res.text();
+  const linhas=csv.split('\n').slice(1);
+  linhas.forEach(l=>{
+    if(!l.trim()) return;
+    const cols=l.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c=>c.replace(/^"|"$/g,'').trim());
+    let ytId=null, idx=-1;
+    for(let i=0;i<cols.length;i++){ const id=getID(cols[i]); if(id){ ytId=id; idx=i; break; } }
+    if(!ytId) return;
+    const descricao = cols[idx+1] || '';
+    const cantor = cols[idx+2] || 'Avivamento';
+    const statusCol = (cols[idx+3] || '').toLowerCase();
+    const isPlayback = statusCol.startsWith('p');
+    const key=descricao.toLowerCase().trim();
+    if(!descricao) return;
+    if(isPlayback){ mapaPlayback[key]=ytId; }
+    else{ if(!mapaNormal[key]) mapaNormal[key]=ytId; videos.push({ytId, descricao, cantor}); }
+  });
+  videos=[...new Map(videos.map(v=>[v.ytId,v])).values()];
+  videos=embaralhar(videos);
+  const params=new URLSearchParams(location.search);
+  const primeiro=videos.find(v=>v.ytId===params.get('v'))||videos[0];
+  if(primeiro){ videos=videos.filter(v=>v.ytId!==primeiro.ytId); videos.unshift(primeiro); tocarVideo(primeiro.ytId,primeiro.descricao,primeiro.cantor,false); }
+}
+carregar();
+window.addEventListener('scroll',()=>{ if(window.innerHeight+window.scrollY>=document.body.offsetHeight-500) carregarMais(); });
+</script>
+</body>
+</html>

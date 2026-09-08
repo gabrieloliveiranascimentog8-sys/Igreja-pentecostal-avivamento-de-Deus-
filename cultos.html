@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cultos</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#050505;color:#fff;font-family:'Inter',system-ui,Arial,sans-serif;padding-bottom:110px}
+
+/* PLAYER HERO - AGORA É A LIVE */
+.hero{margin:16px;border-radius:28px;overflow:hidden;position:relative;height:300px;background:#0a0a0a;border:1px solid #1a1a1a}
+.hero::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.9) 0%,rgba(0,0,0,.6) 45%,rgba(0,0,0,.15) 100%), url('https://images.unsplash.com/photo-1507692049790-de582271b56b?q=80&w=1200');background-size:cover;background-position:center 30%;z-index:1}
+.hero-content{position:relative;z-index:2;padding:26px 24px;height:100%;display:flex;flex-direction:column;justify-content:center}
+.hero h1{font-size:56px;font-weight:900;line-height:.9;letter-spacing:-1px}
+.hero p{margin-top:14px;color:#c9c9c9;font-size:16.5px;line-height:1.25}
+.hero p b{color:#ffb422}
+.hero .versiculo{margin-top:18px;display:flex;align-items:center;gap:8px;font-size:13px;color:#e8e8e8}
+.hero .versiculo i{color:#ff1a1a}
+
+/* QUANDO TEM LIVE */
+.live-badge{position:absolute;top:16px;left:16px;z-index:3;background:#ff0000;color:#fff;padding:6px 12px;border-radius:20px;font-size:11px;font-weight:900;display:none;align-items:center;gap:6px;animation:pulse 1.2s infinite}
+.live-badge i{width:8px;height:8px;background:#fff;border-radius:50%;display:block}
+.play-central{position:absolute;z-index:3;left:50%;top:50%;transform:translate(-50%,-50%);width:72px;height:72px;background:#fff;border-radius:50%;display:none;align-items:center;justify-content:center;color:#000;font-size:36px}
+.hero.has-live{cursor:pointer}
+.hero.has-live .live-badge{display:flex}
+.hero.has-live .play-central{display:flex}
+.live-player{position:absolute;inset:0;z-index:5;display:none;background:#000}
+.live-player iframe{width:100%;height:100%;border:0}
+.hero.playing .live-player{display:block}
+.hero.playing::before,.hero.playing .hero-content,.hero.playing .play-central,.hero.playing .live-badge{display:none}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,0,0,.7)}70%{box-shadow:0 0 0 12px rgba(255,0,0,0)}100%{box-shadow:0 0 0 0 rgba(255,0,0,0)}}
+
+.lista{padding:8px 16px;display:flex;flex-direction:column;gap:14px}
+.card-culto{background:#101010;border-radius:20px;padding:18px 14px;display:flex;align-items:center;gap:12px;border:1px solid #1c1c1c}
+.icon-culto{width:62px;min-width:62px;height:62px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1.8px solid}
+.icon-culto i{font-size:28px}
+.card-culto .info{flex:1;min-width:0}
+.card-culto .info h3{font-size:15px;line-height:1.1;font-weight:600;color:#e5e5e5}
+.card-culto .info h3 span{display:block;font-weight:900;font-size:18px;margin-top:2px}
+.card-culto .info p{font-size:11.5px;color:#7a7a7a;margin-top:5px;line-height:1.25}
+.divisor{width:1px;height:52px;background:#232323;flex-shrink:0}
+.direita{text-align:center;min-width:100px;display:flex;flex-direction:column;align-items:center;gap:6px}
+.badge-dia{font-size:10px;font-weight:800;padding:6px 12px;border-radius:20px;text-transform:uppercase;white-space:nowrap}
+.hora{font-size:26px;font-weight:900}
+.culto-oracao .icon-culto{border-color:#ff2a2a;color:#ff3a3a;background:rgba(255,42,42,.07)}.culto-oracao span{color:#ff2a2a}.badge-terca{background:#6e1e1e;color:#ffc2c2}
+.culto-libertacao .icon-culto{border-color:#ffb422;color:#ffb422;background:rgba(255,180,34,.07)}.culto-libertacao span{color:#ffb422}.badge-quinta{background:#5e4212;color:#ffde9a}
+.culto-ensino .icon-culto{border-color:#1e7a3a;color:#2ecc71;background:rgba(46,204,113,.07)}.culto-ensino span{color:#2ecc71}.badge-sabado{background:#1a5a2e;color:#a6f0bf}
+.culto-familia .icon-culto{border-color:#214a8a;color:#3b82f6;background:rgba(59,130,246,.07)}.culto-familia span{color:#3b82f6}.badge-domingo{background:#1c2f5a;color:#a8c6ff}
+
+.local{margin:14px 16px;background:#101010;border-radius:20px;padding:18px;border:1px solid #1d1d1d;display:flex;justify-content:space-between;align-items:center}
+.local h3{font-size:19px;display:flex;align-items:center;gap:10px;font-weight:800}.local h3 i{color:#ff1a1a}
+.local p{font-size:13px;color:#d0d0d0}.local small{color:#777;font-size:11px;display:block;margin-top:8px;line-height:1.3}
+.pin{font-size:74px;color:#ff1a1a}
+
+.secao-grid{padding:24px 16px 0}
+.secao-grid h2{display:flex;align-items:center;gap:8px;font-size:17px;font-weight:800;margin-bottom:14px}
+.grid-insta{display:grid;grid-template-columns:1fr 1fr 1fr;gap:3px;border-radius:18px;overflow:hidden}
+.grid-item{aspect-ratio:1/1;background:#111;position:relative;overflow:hidden;cursor:pointer}
+.grid-item img{width:100%;height:100%;object-fit:cover}
+.grid-item i.play-mini{position:absolute;right:6px;top:6px;font-size:14px;color:#fff;text-shadow:0 1px 4px #000}
+
+.nav{position:fixed;bottom:0;left:0;right:0;background:#0a0a0a;border-top:1px solid #1a1a1a;display:flex;justify-content:space-around;padding:12px 0 22px;z-index:20}
+.nav-item{color:#6a6a6a;display:flex;flex-direction:column;align-items:center;gap:5px;font-size:11px;cursor:pointer}
+.nav-item i{font-size:26px}
+.nav-item.active{color:#ff1a1a}
+</style>
+</head>
+<body>
+
+<!-- AQUI É O PLAYER - SE TIVER LIVE VIRA PLAYER AUTOMATICO -->
+<div class="hero" id="heroCard" onclick="abrirLive()">
+  <div class="live-badge"><i></i> AO VIVO AGORA</div>
+  <div class="play-central"><i class="bi bi-play-fill"></i></div>
+  <div class="hero-content">
+    <h1>Cultos</h1>
+    <p>Conecte-se com <b>Deus</b><br>e transforme sua vida<br>e sua família!</p>
+    <div class="versiculo"><i class="bi bi-heart-fill"></i> Jesus Cristo é o Senhor</div>
+  </div>
+  <div class="live-player" id="livePlayer"></div>
+</div>
+
+<div class="lista">
+  <div class="card-culto culto-oracao"><div class="icon-culto"><i class="bi bi-person-arms-up"></i></div><div class="info"><h3>Culto de <span>Oração</span></h3><p>Venha orar e buscar a presença de Deus!</p></div><div class="divisor"></div><div class="direita"><span class="badge-dia badge-terca">TERÇA-FEIRA</span><div class="hora">19:30</div></div></div>
+  <div class="card-culto culto-libertacao"><div class="icon-culto"><i class="bi bi-link-45deg"></i></div><div class="info"><h3>Culto de <span>Libertação</span></h3><p>Deus tem poder para libertar você!</p></div><div class="divisor"></div><div class="direita"><span class="badge-dia badge-quinta">QUINTA-FEIRA</span><div class="hora">19:30</div></div></div>
+  <div class="card-culto culto-ensino"><div class="icon-culto"><i class="bi bi-book"></i></div><div class="info"><h3>Culto de <span>Ensino</span></h3><p>Aprenda mais da Palavra e cresça na fé!</p></div><div class="divisor"></div><div class="direita"><span class="badge-dia badge-sabado">SÁBADO</span><div class="hora">18:30</div></div></div>
+  <div class="card-culto culto-familia"><div class="icon-culto"><i class="bi bi-people-fill"></i></div><div class="info"><h3>Culto da <span>Família</span></h3><p>Um tempo especial para toda a família!</p></div><div class="divisor"></div><div class="direita"><span class="badge-dia badge-domingo">DOMINGO</span><div class="hora">18:30</div></div></div>
+</div>
+
+<div class="local" onclick="window.open('https://maps.google.com/?q=Santa+Edwirges+Rua+A+28','_blank')">
+  <div><h3><i class="bi bi-geo-alt-fill"></i> Localização</h3><p style="margin-top:10px">Bairro: Santa Edwirges</p><p><b>Rua A, Nº 28</b></p><small>Venha nos visitar!<br>Será uma alegria ter você.</small></div>
+  <div class="pin"><i class="bi bi-geo-alt-fill"></i></div>
+</div>
+
+<div class="secao-grid">
+  <h2><i class="bi bi-grid-3x3-gap-fill"></i> Momentos da Igreja</h2>
+  <div class="grid-insta" id="gridCultos"></div>
+</div>
+
+<div class="nav">
+  <div class="nav-item" onclick="location.href='index.html'"><i class="bi bi-house"></i><span>Início</span></div>
+  <div class="nav-item" onclick="location.href='video.html'"><i class="bi bi-play-btn"></i><span>Vídeos</span></div>
+  <div class="nav-item" onclick="location.href='kids.html'"><i class="bi bi-puzzle"></i><span>Kids</span></div>
+  <div class="nav-item active"><i class="bi bi-calendar3-week-fill"></i><span>Cultos</span></div>
+  <div class="nav-item" onclick="location.href='quiz.html'"><i class="bi bi-trophy"></i><span>Quiz</span></div>
+</div>
+
+<script>
+const SHEET_ID = `1tFe-1zOzZwD_Wc_UsydvUUHnl70Y_Woh-SwNoD-yyWk`;
+const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
+let liveId = null;
+function getID(u){ if(!u) return null; let m=u.match(/(?:v=|youtu\.be\/|shorts\/|embed\/)([A-Za-z0-9_-]{11})/); return m?m[1]:null; }
+function abrirLive(){
+  if(!liveId) return;
+  document.getElementById('heroCard').classList.add('playing');
+  document.getElementById('livePlayer').innerHTML = `<iframe src="https://www.youtube.com/embed/${liveId}?autoplay=1" allow="autoplay; fullscreen" allowfullscreen></iframe>`;
+}
+async function checarLive(){
+  const res = await fetch(SHEET_URL+'&cb='+Date.now());
+  const csv = await res.text();
+  for(let l of csv.split('\n').slice(1)){
+    if(l.toLowerCase().includes('ao vivo') || l.toLowerCase().includes('live')){
+      const cols = l.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c=>c.replace(/^"|"$/g,'').trim());
+      for(let c of cols){ const id=getID(c); if(id){ liveId=id; document.getElementById('heroCard').classList.add('has-live'); return; } }
+    }
+  }
+  // PARA TESTAR: descomente a linha abaixo
+  // liveId='dQw4w9WgXcQ'; document.getElementById('heroCard').classList.add('has-live');
+}
+async function carregarGrid(){
+  const res = await fetch(SHEET_URL+'&cb='+Date.now());
+  const csv = await res.text();
+  let vids=[];
+  csv.split('\n').slice(1).forEach(l=>{ const cols=l.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/); for(let c of cols){ const id=getID(c); if(id) vids.push(id); } });
+  vids=[...new Set(vids)].slice(0,18);
+  document.getElementById('gridCultos').innerHTML = vids.map(id=>`
+    <div class="grid-item" onclick="location.href='video.html?v=${id}'">
+      <img src="https://img.youtube.com/vi/${id}/mqdefault.jpg" loading="lazy">
+      <i class="bi bi-play-fill play-mini"></i>
+    </div>`).join('');
+}
+checarLive(); carregarGrid();
+</script>
+</body>
+</html>
