@@ -8,8 +8,15 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:#0a0a0a;color:#fff;font-family:Arial,sans-serif;padding-bottom:85px}
-.top-player{width:100%;aspect-ratio:16/9;background:#000;position:sticky;top:0;z-index:10}
+.top-player{width:100%;aspect-ratio:16/9;background:#000;position:sticky;top:0;z-index:10;overflow:hidden}
 .top-player iframe{width:100%;height:100%}
+/* SÓ ISSO QUE ADICIONEI - CAPA */
+.capa-thumb{position:absolute;inset:0;background:#000;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;background-size:cover;background-position:center}
+.capa-thumb::after{content:'';position:absolute;inset:0;background:rgba(0,0,0,.65)}
+.capa-conteudo{position:relative;z-index:2;text-align:center}
+.capa-conteudo img.thumb{width:220px;aspect-ratio:16/9;object-fit:cover;border-radius:12px}
+.spinner{width:24px;height:24px;border:3px solid rgba(255,255,255,.2);border-top:3px solid #ff2d55;border-radius:50%;animation:spin 1s linear infinite;margin:12px auto 0}
+@keyframes spin{to{transform:rotate(360deg)}}
 .info{padding:16px}
 .title{font-size:20px;font-weight:800}
 .views{font-size:13px;opacity:.6;margin-top:6px}
@@ -60,25 +67,47 @@ function embaralhar(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.r
 let videos=[], filtrados=[], atualId=null, player=null, listaAtual=[], visiveis=0; const POR_VEZ=10;
 let mapaPlayback={}, mapaNormal={}, modoAtual='normal', descricaoAtual='', cantorAtual='';
 let curtidos = JSON.parse(localStorage.getItem('curtidos_videos')||'{}');
+let travaSom = null; // só isso adicionei
+
 function onYouTubeIframeAPIReady(){}
+
+// NOVA FUNÇÃO - mostra capa do vídeo por cima do anúncio
+function mostrarCapa(ytId){
+  const capa = document.getElementById('capa');
+  if(!capa) return;
+  const img = document.getElementById('capaImg');
+  const thumbUrl = `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
+  if(img) img.src = thumbUrl;
+  capa.style.backgroundImage = `url(${thumbUrl})`;
+  capa.style.display='flex';
+  travaSom = setInterval(()=>{ if(player && player.mute){ player.mute(); player.setVolume(0); } }, 80);
+  setTimeout(()=>{
+    clearInterval(travaSom);
+    capa.style.display='none';
+    if(player && player.unMute){ player.unMute(); player.setVolume(100); }
+  }, 7000);
+}
+
 function criarPlayer(id){
-  document.getElementById('mainPlayer').innerHTML=`<div id="yt-player"></div>`;
+  document.getElementById('mainPlayer').innerHTML=`
+    <div id="yt-player"></div>
+    <div id="capa" class="capa-thumb">
+      <div class="capa-conteudo">
+        <img id="capaImg" class="thumb" src="https://img.youtube.com/vi/${id}/hqdefault.jpg">
+        <p style="margin-top:12px;font-weight:700">Carregando louvor...</p>
+        <div class="spinner"></div>
+      </div>
+    </div>`;
   player=new YT.Player('yt-player',{
     width:'100%',height:'100%',
     videoId:id,
     host:'https://www.youtube-nocookie.com',
-    playerVars:{autoplay:1,controls:1,fs:1,rel:0,playsinline:1,modestbranding:1},
+    playerVars:{autoplay:1,controls:1,fs:1,rel:0,playsinline:1,modestbranding:1,mute:1},
     events:{
       'onReady': (e) => {
-        e.target.mute(); // COMEÇA MUDO PRA NÃO OUVIR O ANÚNCIO
+        e.target.mute();
         e.target.playVideo();
-        // Desmuta sozinho após 6s (tempo do botão Pular)
-        setTimeout(() => {
-          if(player && player.unMute) {
-            player.unMute();
-            player.setVolume(100);
-          }
-        }, 6000);
+        mostrarCapa(id);
       },
       'onStateChange': onPlayerStateChange
     }
@@ -86,9 +115,8 @@ function criarPlayer(id){
 }
 
 function onPlayerStateChange(e){
-  // Se o vídeo começou a tocar (depois do anúncio), garante som ligado
   if(e.data==1){
-    setTimeout(()=>{ if(player && player.isMuted && player.isMuted()){ player.unMute(); } }, 500);
+    setTimeout(()=>{ if(player && player.isMuted && player.isMuted()){ /* mantém mudo até acabar capa */ } }, 500);
   }
   if(e.data===0){
     if(!document.getElementById('autoSwitch').classList.contains('active')) return;
@@ -108,13 +136,13 @@ function tocarVideo(ytId, descricao, cantor, manterFila=true){
   document.getElementById('btnPlayback').style.display=mapaPlayback[key]?'flex':'none';
   document.getElementById('txtPlayback').innerText='Playback';
   atualizarBotaoCurtir();
-  if(player&&player.loadVideoById) player.loadVideoById(ytId); else criarPlayer(ytId);
+  if(player&&player.loadVideoById){ player.loadVideoById(ytId); player.mute(); mostrarCapa(ytId); } else criarPlayer(ytId);
   resetarLista(); history.replaceState(null,'',`?v=${ytId}`);
 }
 function alternarPlayback(){
   const key=descricaoAtual.toLowerCase().trim(); const idPlay=mapaPlayback[key]; const idNormal=mapaNormal[key]; if(!idPlay) return;
-  if(modoAtual==='normal'){ modoAtual='playback'; atualId=idPlay; player.loadVideoById(idPlay); document.getElementById('mainViews').innerText=`Playback • ${cantorAtual}`; document.getElementById('txtPlayback').innerText='Vídeo normal'; }
-  else{ modoAtual='normal'; atualId=idNormal; player.loadVideoById(idNormal); document.getElementById('mainViews').innerText=`Tocando agora • ${cantorAtual}`; document.getElementById('txtPlayback').innerText='Playback'; }
+  if(modoAtual==='normal'){ modoAtual='playback'; atualId=idPlay; player.loadVideoById(idPlay); mostrarCapa(idPlay); document.getElementById('mainViews').innerText=`Playback • ${cantorAtual}`; document.getElementById('txtPlayback').innerText='Vídeo normal'; }
+  else{ modoAtual='normal'; atualId=idNormal; player.loadVideoById(idNormal); mostrarCapa(idNormal); document.getElementById('mainViews').innerText=`Tocando agora • ${cantorAtual}`; document.getElementById('txtPlayback').innerText='Playback'; }
 }
 function atualizarBotaoCurtir(){
   const btn=document.getElementById('btnCurtir');
