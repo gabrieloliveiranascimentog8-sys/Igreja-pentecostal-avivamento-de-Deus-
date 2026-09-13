@@ -8,53 +8,70 @@
 <link rel="stylesheet" href="index.css">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:#000;color:#fff;font-family:Arial,sans-serif;overflow-y:auto}
-.player-area{width:100%;height:56vw;max-height:300px;background:#000;position:sticky;top:0;z-index:20}
-.player-area iframe,#yt-player-kids{width:100%;height:100%;border:0}
-.bloqueio-video{position:absolute;inset:0;z-index:8;display:none;background:transparent}
-body.locked.bloqueio-video{display:block} /* CORRIGIDO */
-body.locked.navbar{pointer-events:none;opacity:.2} /* CORRIGIDO */
-.top-controls{position:absolute;top:8px;right:8px;z-index:10;display:flex;gap:8px}
-.btn-icon{width:38px;height:38px;border-radius:50%;border:0;background:rgba(0,0,0,.7);color:#fff;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);font-size:18px;cursor:pointer}
-.btn-icon.lock-on{background:#ff0000}
-.conteudo{padding-bottom:100px} /* garante rolagem */
+html,body{height:auto;overflow-y:auto}
+body{background:#000;color:#fff;font-family:Arial,sans-serif}
+.player-area{width:100%;height:56vw;max-height:400px;background:#000;position:relative;z-index:20}
+.video-wrapper{width:100%;height:100%;position:relative;background:#000;overflow:hidden}
+#yt-player-kids,#drive-player{width:100%;height:100%;border:0;background:#000;position:absolute;inset:0}
+.video-player{width:100%;height:100%;background:#000;object-fit:contain;position:absolute;inset:0}
+.controls-layer{position:absolute;inset:0;z-index:15;opacity:0;pointer-events:none;transition:opacity.3s}
+.controls-layer.show{opacity:1;pointer-events:all}
+.btn-lock{position:absolute;top:12px;right:12px;width:38px;height:38px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;pointer-events:all!important;z-index:30}
+.btn-lock.lock-on{background:#ff0000}
+.btn-full{position:absolute;bottom:12px;right:12px;width:38px;height:38px;border-radius:8px;border:0;background:rgba(0,0,0,.6);color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;pointer-events:all!important;z-index:30}
+.bloqueio-video{position:absolute;inset:0;z-index:5;display:none}
+.conteudo{padding-bottom:110px}
 .section-head{padding:18px 16px 12px;display:flex;justify-content:space-between;align-items:center}
 .section-head h2{font-size:22px;font-weight:900;border-left:4px solid #ff0000;padding-left:10px}
-.section-head span{color:#ff0000;font-size:14px}
-.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:0 12px}
-.card{border-radius:18px;overflow:hidden;position:relative;height:170px;background:#111;cursor:pointer;border:2px solid transparent}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 12px}
+.card{border-radius:14px;overflow:hidden;position:relative;aspect-ratio:16/9;background:#111;cursor:pointer;border:2px solid transparent}
+.card img{width:100%;height:100%;object-fit:cover;display:block}
 .card.active{border-color:#ff0000}
-.card img{width:100%;height:100%;object-fit:cover}
-.card::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.05) 40%, rgba(0,0,0,.85) 100%)}
-.card-top{position:absolute;top:8px;left:8px;right:8px;z-index:2;display:flex;justify-content:space-between}
-.card-title{font-size:11px;font-weight:900;text-transform:uppercase;line-height:1.1;width:68%;text-shadow:0 1px 3px #000;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.card-play{width:32px;height:32px;background:rgba(0,0,0,.35);border:1.5px solid #fff;border-radius:50%;display:flex;align-items:center;justify-content:center}
-.card-nome{position:absolute;bottom:8px;left:8px;right:8px;z-index:2;background:rgba(0,0,0,.75);padding:4px 8px;border-radius:8px;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#ph{background-size:cover;background-position:center;background-color:#000;z-index:6;position:absolute;inset:0;display:none;align-items:center;justify-content:center}
+#ph::after{content:'';position:absolute;inset:0;background:rgba(0,0,0,.35);z-index:1}
+.spinner{position:relative;z-index:2;width:36px;height:36px;border:3px solid rgba(255,255,255,.3);border-top-color:#ff0000;border-radius:50%;animation:spin.7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.video-wrapper.landscape{
+  position:fixed!important;
+  inset:0!important;
+  width:100vw!important;
+  height:100vh!important;
+  max-height:none!important;
+  z-index:99999!important;
+  background:#000;
+}
+body.landscape-mode{overflow:hidden!important}
+body.landscape-mode #conteudo{display:none!important}
+body.landscape-mode #navBar{display:none!important}
 </style>
 </head>
 <body>
 
-<div class="player-area" id="kidsPlayer">
-  <div id="yt-wrap" style="width:100%;height:100%;position:relative">
-    <div class="top-controls">
-      <button class="btn-icon" onclick="proximoVideo()"><i class="bi bi-skip-forward-fill"></i></button>
-      <button class="btn-icon" id="btnLock" onclick="toggleLock()"><i class="bi bi-lock"></i></button>
+<div class="player-area" id="playerArea">
+  <div class="video-wrapper" id="videoWrap" onclick="handleTap()">
+    <div id="yt-player-kids" style="display:none"></div>
+    <video id="playerA" class="video-player" playsinline preload="auto"></video>
+    <video id="playerB" class="video-player" style="display:none" playsinline preload="auto" muted></video>
+    <iframe id="drive-player" style="display:none" allowfullscreen></iframe>
+    <div id="controls" class="controls-layer">
+      <button class="btn-lock" id="btnLock" onclick="toggleLock(event)"><i class="bi bi-lock"></i></button>
+      <button class="btn-full" id="btnRotate" onclick="rotateVideo(event)"><i class="bi bi-arrows-fullscreen"></i></button>
     </div>
-    <div class="bloqueio-video" id="blockVideo"></div>
-    <div id="yt-player-kids" style="width:100%;height:100%"></div>
-    <div id="ph" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#555;background:#000">Carregando...</div>
+    <div class="bloqueio-video" id="blockVideo" onclick="handleTap()"></div>
+    <div id="ph"><div style="position:relative;z-index:2"><div class="spinner"></div></div></div>
   </div>
 </div>
 
-<div class="conteudo">
+<div class="conteudo" id="conteudo">
   <div class="section-head"><h2>Desenhos</h2><span id="qtd"></span></div>
-  <div class="grid-3" id="gridDesenhos"></div>
+  <div class="grid-2" id="gridDesenhos"></div>
+  <div id="sentinela" style="height:300px"></div>
 </div>
 
-<div class="nav">
+<div class="nav" id="navBar">
   <div class="nav-item" onclick="if(!locked) location.href='index.html'"><i class="bi bi-house-door-fill"></i><span>Início</span></div>
   <div class="nav-item" onclick="if(!locked) location.href='video.html'"><i class="bi bi-play-btn-fill"></i><span>Vídeos</span></div>
-  <div class="nav-item active" onclick="if(!locked) location.href='kids.html'"><i class="bi bi-puzzle-fill"></i><span>Kids</span></div>
+  <div class="nav-item active"><i class="bi bi-puzzle-fill"></i><span>Kids</span></div>
   <div class="nav-item" onclick="if(!locked) location.href='cultos.html'"><i class="bi bi-calendar-heart-fill"></i><span>Cultos</span></div>
   <div class="nav-item" onclick="if(!locked) location.href='quiz.html'"><i class="bi bi-trophy-fill"></i><span>Quiz</span></div>
 </div>
@@ -62,97 +79,204 @@ body.locked.navbar{pointer-events:none;opacity:.2} /* CORRIGIDO */
 <script src="https://www.youtube.com/iframe_api"></script>
 <script>
 const SHEET_URL = `https://docs.google.com/spreadsheets/d/1Mn4uJoNISA0ToIsMOaH_AWmOeiZ9P7poy2feA2Alwng/gviz/tq?tqx=out:csv`;
-let videosKids = [], ordemToca = [], atualIndex = 0, player = null;
-let locked = false;
-
-function getID(url){ let m=(url||'').match(/(?:v=|youtu\.be\/|shorts\/|embed\/)([A-Za-z0-9_-]{11})/); return m?m[1]:null }
-function onYouTubeIframeAPIReady(){ carregar(); }
-function embaralhar(a){ for(let i=a.length-1;i>0;i--){ let j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]] } return a }
-
-function toggleLock(){
-  locked =!locked;
-  document.body.classList.toggle('locked', locked);
-  const btn = document.getElementById('btnLock');
-  btn.classList.toggle('lock-on', locked);
-  btn.innerHTML = locked? `<i class="bi bi-lock-fill"></i>` : `<i class="bi bi-unlock"></i>`;
-  document.getElementById('blockVideo').style.display = locked? 'block' : 'none';
-}
-
-function tocarNoBanner(index){
-  atualIndex = index;
-  let video = ordemToca[atualIndex];
-  if(!video) return;
-  document.getElementById('ph').style.display = 'none';
-
-  if(player && player.loadVideoById){
-    // JÁ EXISTE PLAYER - SÓ TROCA E JÁ COMEÇA TOCANDO SEM PRECISAR PLAY
-    player.loadVideoById({videoId: video.ytId, startSeconds: 0});
-    player.playVideo();
-  } else {
-    player = new YT.Player('yt-player-kids',{
-      videoId: video.ytId,
-      playerVars:{
-        autoplay:1,
-        controls:0, // sem controles pra não ir pro YouTube
-        fs:0,
-        rel:0,
-        playsinline:1,
-        modestbranding:1,
-        iv_load_policy:3,
-        disablekb:1,
-        enablejsapi:1
-      },
-      events:{
-        onReady:(e)=>{ e.target.playVideo(); },
-        onStateChange:(e)=>{
-          if(e.data===0){ proximoVideo(); }
-        }
-      }
-    });
+let videosKids=[], ordemToca=[], atualIndex=0, player=null, locked=false, hideTimer=null, loadingTimer=null;
+let itensMostrados=10;
+let playerAtivo='A';
+let isLandscape=false;
+const pA=document.getElementById('playerA');
+const pB=document.getElementById('playerB');
+const ph=document.getElementById('ph');
+function getYT(u){let m=(u||'').match(/(?:v=|youtu\.be\/|shorts\/|embed\/)([A-Za-z0-9_-]{11})/);return m?m[1]:null}
+function isMP4(u){return /\.(mp4|webm|mov|m4v)(\?.*)?$/i.test(u)||/catbox/i.test(u)}
+function isDrive(u){return /drive\.google\.com/.test(u)}
+function onYouTubeIframeAPIReady(){carregar()}
+function embaralhar(a){for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function getAtivo(){return playerAtivo==='A'?pA:pB}
+function getInativo(){return playerAtivo==='A'?pB:pA}
+function handleTap(){
+  const ctrl=document.getElementById('controls');
+  const btnLock=document.getElementById('btnLock');
+  const btnRotate=document.getElementById('btnRotate');
+  if(locked){
+    ctrl.classList.add('show');
+    btnLock.style.display='flex';
+    btnRotate.style.display='none';
+    clearTimeout(hideTimer);
+    hideTimer=setTimeout(()=>ctrl.classList.remove('show'),3000);
+    return;
   }
+  if(ctrl.classList.contains('show')) ctrl.classList.remove('show');
+  else {
+    ctrl.classList.add('show');
+    btnLock.style.display='flex';
+    btnRotate.style.display='flex';
+    clearTimeout(hideTimer);
+    hideTimer=setTimeout(()=>ctrl.classList.remove('show'),3000);
+  }
+}
+function toggleLock(e){
+  e.stopPropagation();
+  locked=!locked;
+  const btn=document.getElementById('btnLock');
+  const btnRotate=document.getElementById('btnRotate');
+  btn.classList.toggle('lock-on', locked);
+  btn.innerHTML=locked?`<i class="bi bi-lock-fill"></i>`:`<i class="bi bi-unlock"></i>`;
+  document.getElementById('blockVideo').style.display=locked?'block':'none';
+  const ctrl=document.getElementById('controls');
+  ctrl.classList.add('show');
+  btnRotate.style.display=locked?'none':'flex';
+  if(!locked){
+    clearTimeout(hideTimer);
+    hideTimer=setTimeout(()=>ctrl.classList.remove('show'),3000);
+  }
+}
+function rotateVideo(e){
+  e.stopPropagation();
+  const wrap=document.getElementById('videoWrap');
+  const btn=e.currentTarget;
+  isLandscape=!isLandscape;
+  if(isLandscape){
+    wrap.classList.add('landscape');
+    document.body.classList.add('landscape-mode');
+    document.getElementById('navBar').style.display='none';
+    document.getElementById('conteudo').style.display='none';
+    document.getElementById('playerArea').style.height='100vh';
+    document.getElementById('playerArea').style.maxHeight='100vh';
+    if(wrap.requestFullscreen) wrap.requestFullscreen().catch(()=>{});
+    if(screen.orientation && screen.orientation.lock) screen.orientation.lock('landscape').catch(()=>{});
+    btn.innerHTML=`<i class="bi bi-fullscreen-exit"></i>`;
+  } else {
+    wrap.classList.remove('landscape');
+    document.body.classList.remove('landscape-mode');
+    document.getElementById('navBar').style.display='';
+    document.getElementById('conteudo').style.display='';
+    document.getElementById('playerArea').style.height='';
+    document.getElementById('playerArea').style.maxHeight='';
+    if(document.fullscreenElement) document.exitFullscreen().catch(()=>{});
+    if(screen.orientation){
+      if(screen.orientation.unlock) screen.orientation.unlock();
+      if(screen.orientation.lock){
+        screen.orientation.lock('portrait').catch(()=>{}).then(()=>{setTimeout(()=>{if(screen.orientation.unlock)screen.orientation.unlock();},300);});
+      }
+    }
+    btn.innerHTML=`<i class="bi bi-arrows-fullscreen"></i>`;
+  }
+  const ctrl=document.getElementById('controls');
+  ctrl.classList.add('show');
+  clearTimeout(hideTimer);
+  hideTimer=setTimeout(()=>ctrl.classList.remove('show'),3000);
+}
+function mostrar(t){
+  document.getElementById('yt-player-kids').style.display=t==='yt'?'block':'none';
+  document.getElementById('drive-player').style.display=t==='drive'?'block':'none';
+  if(t!=='mp4'){pA.style.display='none';pB.style.display='none'}
+}
+function mostrarLoading(capa){
+  clearTimeout(loadingTimer);
+  ph.style.backgroundImage=`url('${capa||''}')`;
+  loadingTimer=setTimeout(()=>ph.style.display='flex',300);
+}
+function esconderLoading(){clearTimeout(loadingTimer);ph.style.display='none'}
+function preloadProximo(){
+  let idx=atualIndex+1;
+  if(idx>=ordemToca.length) idx=0;
+  let v=ordemToca[idx];
+  if(!v || v.type!=='mp4') return;
+  let inativo=getInativo();
+  if(inativo.src===v.src) return;
+  inativo.src=v.src;
+  inativo.load();
+  inativo.pause();
+  inativo.currentTime=0;
+}
+function tocarMP4(v){
+  mostrar('mp4');
+  mostrarLoading(v.capa);
+  let ativo=getAtivo();
+  let inativo=getInativo();
+  if(inativo.src===v.src && inativo.readyState>=2){
+    ativo.style.display='none';
+    ativo.pause();
+    inativo.style.display='block';
+    inativo.muted=false;
+    inativo.play().catch(()=>{});
+    inativo.onended=proximoVideo;
+    playerAtivo=playerAtivo==='A'?'B':'A';
+    esconderLoading();
+    setTimeout(preloadProximo, 500);
+    return;
+  }
+  pA.style.display=playerAtivo==='A'?'block':'none';
+  pB.style.display=playerAtivo==='B'?'block':'none';
+  ativo.src=v.src;
+  ativo.muted=true;
+  ativo.load();
+  ativo.style.display='block';
+  ativo.onloadeddata=()=>{
+    esconderLoading();
+    ativo.play().then(()=>{setTimeout(()=>{ativo.muted=false},200);preloadProximo();}).catch(()=>{});
+  };
+  ativo.oncanplay=()=>esconderLoading();
+  ativo.onended=proximoVideo;
+}
+function tocarNoBanner(i){
+  atualIndex=i;
+  let v=ordemToca[atualIndex];
+  if(!v) return;
   render();
+  if(v.type==='mp4'){
+    if(player&&player.pauseVideo)player.pauseVideo();
+    tocarMP4(v);
+  } else if(v.type==='drive'){
+    if(player&&player.pauseVideo)player.pauseVideo();
+    mostrarLoading(v.capa);
+    mostrar('drive');
+    document.getElementById('drive-player').src=v.src;
+    document.getElementById('drive-player').onload=()=>{esconderLoading();preloadProximo();};
+  } else {
+    mostrarLoading(v.capa);
+    mostrar('yt');
+    if(player&&player.loadVideoById)player.loadVideoById({videoId:v.ytId});
+    else player=new YT.Player('yt-player-kids',{videoId:v.ytId,playerVars:{autoplay:1,controls:0,fs:0,rel:0,playsinline:1,modestbranding:1,enablejsapi:1},events:{onReady:e=>e.target.playVideo(),onStateChange:e=>{if(e.data===1){esconderLoading();preloadProximo();}if(e.data===0)proximoVideo()}}});
+    setTimeout(()=>{esconderLoading();preloadProximo();},1000);
+  }
+  if(!isLandscape) window.scrollTo({top:0,behavior:'smooth'});
 }
-
 function proximoVideo(){
-  let assistido = ordemToca.splice(atualIndex,1)[0];
-  ordemToca.push(assistido);
-  if(atualIndex >= ordemToca.length) atualIndex = 0;
-  tocarNoBanner(atualIndex);
-  // rola suave pro topo pra ver que trocou
-  window.scrollTo({top:0, behavior:'smooth'});
+  let n=atualIndex+1;
+  if(n>=ordemToca.length){ordemToca=embaralhar([...ordemToca]);n=0}
+  tocarNoBanner(n);
 }
-
 function render(){
-  document.getElementById('gridDesenhos').innerHTML = ordemToca.map((v,i)=>`
-    <div class="card ${i===atualIndex?'active':''}" onclick="tocarNoBanner(${i})">
-      <img src="https://img.youtube.com/vi/${v.ytId}/mqdefault.jpg">
-      <div class="card-top"><div class="card-title">${v.descricao}</div><div class="card-play"><i class="bi bi-play-fill"></i></div></div>
-      <div class="card-nome">${v.nome}</div>
-    </div>
-  `).join('');
-  document.getElementById('qtd').innerText = ordemToca.length + ' vídeos';
+  let slice=ordemToca.slice(0,itensMostrados);
+  document.getElementById('gridDesenhos').innerHTML=slice.map((v,i)=>{
+    let thumb=v.capa||(v.ytId?`https://img.youtube.com/vi/${v.ytId}/hqdefault.jpg`:'');
+    return `<div class="card ${i===atualIndex?'active':''}" onclick="tocarNoBanner(${i})"><img src="${thumb}" loading="lazy"></div>`;
+  }).join('');
+  document.getElementById('qtd').innerText=ordemToca.length+' vídeos';
 }
-
+const obs=new IntersectionObserver(es=>{if(es[0].isIntersecting&&itensMostrados<ordemToca.length){itensMostrados+=10;render()}},{rootMargin:'200px'});
+obs.observe(document.getElementById('sentinela'));
 async function carregar(){
   try{
-    const res = await fetch(SHEET_URL);
-    const csv = await res.text();
-    const linhas = csv.split('\n').slice(1);
+    const r=await fetch(SHEET_URL);const csv=await r.text();const linhas=csv.split('\n').slice(1);
     linhas.forEach(l=>{
-      if(!l.trim()) return;
-      const cols = l.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c=>c.replace(/^"|"$/g,'').trim());
-      const [desenho, descricao, nome] = cols;
-      const ytId = getID(desenho);
-      if(ytId && descricao) videosKids.push({ytId, descricao: descricao.toUpperCase(), nome: nome.toLowerCase()});
+      if(!l.trim())return;
+      const cols=l.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c=>c.replace(/^"|"$/g,'').trim());
+      let link=(cols[0]||'').trim();let capaYT=(cols[3]||'').trim();if(!link)return;
+      let capaFinal=null;let ytC=getYT(capaYT);
+      if(ytC)capaFinal=`https://img.youtube.com/vi/${ytC}/hqdefault.jpg`;else if(/\.(jpg|jpeg|png|webp)/i.test(capaYT))capaFinal=capaYT;
+      let ytV=getYT(link);
+      if(ytV)videosKids.push({type:'yt',ytId:ytV,src:link,capa:capaFinal||`https://img.youtube.com/vi/${ytV}/hqdefault.jpg`});
+      else if(isMP4(link))videosKids.push({type:'mp4',src:link,capa:capaFinal});
+      else if(isDrive(link)){let id=(link.match(/\/d\/([^\/]+)/)||[])[1];let pv=id?`https://drive.google.com/file/d/${id}/preview`:link;videosKids.push({type:'drive',src:pv,capa:capaFinal})}
     });
-    videosKids = [...new Map(videosKids.map(v=>[v.ytId,v])).values()];
-    ordemToca = embaralhar([...videosKids]);
-    if(ordemToca.length){
-      render();
-      setTimeout(()=> tocarNoBanner(0), 500); // já começa tocando
-    }
+    videosKids=[...new Map(videosKids.map(v=>[v.src,v])).values()];
+    ordemToca=embaralhar([...videosKids]);
+    render();
+    if(ordemToca.length>0)setTimeout(()=>tocarNoBanner(0),600);
   }catch(e){}
 }
 </script>
 </body>
-</html>
+  </html>
